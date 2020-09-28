@@ -17,8 +17,15 @@ const io = socketio(server)
 // app.use(express.static(publicDirectoryPath))
 app.use(express.static('public'))
 
+let count = 0
 io.on('connection', (socket) => {
     console.log('New WebSicket connection')
+    // Send data to client
+    socket.emit('countUpdated', count)
+    socket.on('increment', () => {
+        // socket.emit('countUpdated', ++count) // to specific client
+        io.emit('countUpdated', ++count) // to every client
+    })
 })
 
 server.listen(port, () => {
