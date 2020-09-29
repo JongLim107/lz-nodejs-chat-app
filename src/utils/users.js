@@ -8,7 +8,10 @@ function addUser({ id, username, room }) {
     if (!username || !room)
         return { error: 'Username and room are required!' }
 
-    const existUser = users.find(user => user.username === username && user.room === room)
+    const existUser = users.find(user => {
+        return user.username === username && user.room === room
+    })
+    
     if (existUser) return { error: 'Username is in use!' }
 
     const user = { id, username, room }
@@ -28,7 +31,7 @@ function getUser(id) {
 }
 
 function getUsersInRoom(room) {
-    return users.filter(user => { user.room === room })
+    return users.filter(user => user.room === room)
 }
 
 module.exports = {

@@ -2,7 +2,7 @@ const path = require('path')
 const express = require('express')
 const Filter = require('bad-words')
 const { generateMessage } = require('./utils/message')
-const { addUser, removeUser, getUser } = require('./utils/users')
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -29,7 +29,7 @@ function onJoiningRoom(socket) {
         socket.join(user.room)
         socket.emit('message', generateMessage('Welcome!'))
         socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`))
-
+        io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room) })
         // socket.emit, io.emit, socket.broadcast.emit
         // io.to.emit, socket.broadcast.to.emit
     })
@@ -41,9 +41,9 @@ function onSendMessage(socket) {
         if (filter.isProfane(message)) {
             return callback('Profanity is not allowed!')
         }
-        
+
         const user = getUser(socket.id)
-        io.to(user.room).emit('message', generateMessage(message))
+        io.to(user.room).emit('message', generateMessage(message, user.username))
         callback()
     })
 }
@@ -51,7 +51,7 @@ function onSendMessage(socket) {
 function onSendLocation(socket) {
     socket.on('sendLocation', (coords, callback) => {
         const user = getUser(socket.id)
-        io.to(user.room).emit('locationMessage', generateMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`))
+        io.to(user.room).emit('locationMessage', generateMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`, user.username))
         callback()
     })
 }
@@ -61,6 +61,7 @@ function onDisconnect(socket) {
         const user = removeUser(socket.id)
         if (user) {
             io.to(user.room).emit('message', generateMessage(`${user.username} has left!`))
+            io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room) })
         }
     })
 }

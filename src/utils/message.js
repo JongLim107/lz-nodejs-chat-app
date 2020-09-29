@@ -1,7 +1,12 @@
-function generateMessage(text) {
+const moment = require('moment')
+
+function generateMessage(text, username = 'System') {
+    const timestamp = Date.now()
     return {
         text,
-        createAt: new Date().getTime()
+        username,
+        createdAt: moment(timestamp).format('h:mm:ss a'),
+        timestamp
     }
 }
 
