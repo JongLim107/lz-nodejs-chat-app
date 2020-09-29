@@ -1,5 +1,6 @@
 const path = require('path')
 const express = require('express')
+const Filter = require('bad-words')
 const { generateMessage } = require('./utils/message')
 
 const app = express()
@@ -19,29 +20,39 @@ const io = socketio(server)
 app.use(express.static('public'))
 
 io.on('connection', (socket) => {
-    console.log('New WebSicket connection')
+    console.log('New WebSocket connection')
 
-    // Send data to client
-    socket.emit('broadcast', generateMessage('Welcome!'))
+    socket.on('join', ({ username, room }) => {
+        socket.join(room)
 
-    socket.broadcast.emit('broadcast', generateMessage('A new user has joined!'))
+        socket.emit('message', generateMessage('Welcome!'))
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`))
 
-    socket.on('message', (message, callback) => {
-        // socket.emit('message', message) // to specific client
-        io.emit('broadcast', generateMessage(message)) // to every client
+        // socket.emit, io.emit, socket.broadcast.emit
+        // io.to.emit, socket.broadcast.to.emit
+    })
+
+    socket.on('sendMessage', (message, callback) => {
+        const filter = new Filter()
+
+        if (filter.isProfane(message)) {
+            return callback('Profanity is not allowed!')
+        }
+
+        io.to('Center City').emit('message', generateMessage(message))
         callback()
     })
 
-    socket.on('shareLocation', (coord, callback) => {
-        io.emit('locationMessage', generateMessage(`http://google.com/maps?q=${coord.lat},${coord.log}`))
+    socket.on('sendLocation', (coords, callback) => {
+        io.emit('locationMessage', generateMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`))
         callback()
     })
 
-    socket.on('disconnect', (socket) => {
-        io.emit('broadcast', generateMessage('A user has left!'))
+    socket.on('disconnect', () => {
+        io.emit('message', generateMessage('A user has left!'))
     })
 })
 
 server.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
+    console.log(`Server is up on port ${port}!`)
 })
