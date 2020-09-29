@@ -1,5 +1,6 @@
 const path = require('path')
 const express = require('express')
+const { generateMessage } = require('./utils/message')
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -21,23 +22,23 @@ io.on('connection', (socket) => {
     console.log('New WebSicket connection')
 
     // Send data to client
-    socket.emit('broadcast', 'Welcome!')
+    socket.emit('broadcast', generateMessage('Welcome!'))
 
-    socket.broadcast.emit('broadcast', 'A new user has joined!')
+    socket.broadcast.emit('broadcast', generateMessage('A new user has joined!'))
 
     socket.on('message', (message, callback) => {
         // socket.emit('message', message) // to specific client
-        io.emit('broadcast', message) // to every client
+        io.emit('broadcast', generateMessage(message)) // to every client
         callback()
     })
 
     socket.on('shareLocation', (coord, callback) => {
-        io.emit('broadcast', `http://google.com/maps?q=${coord.lat},${coord.log}`)
+        io.emit('locationMessage', generateMessage(`http://google.com/maps?q=${coord.lat},${coord.log}`))
         callback()
     })
 
     socket.on('disconnect', (socket) => {
-        io.emit('broadcast', 'A user has left!')
+        io.emit('broadcast', generateMessage('A user has left!'))
     })
 })
 
