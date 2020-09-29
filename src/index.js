@@ -19,19 +19,21 @@ app.use(express.static('public'))
 
 io.on('connection', (socket) => {
     console.log('New WebSicket connection')
-    
+
     // Send data to client
     socket.emit('broadcast', 'Welcome!')
-    
+
     socket.broadcast.emit('broadcast', 'A new user has joined!')
-    
-    socket.on('message', (message) => {
+
+    socket.on('message', (message, callback) => {
         // socket.emit('message', message) // to specific client
         io.emit('broadcast', message) // to every client
+        callback()
     })
-    
-    socket.on('shareLocation', (coord) => {
+
+    socket.on('shareLocation', (coord, callback) => {
         io.emit('broadcast', `http://google.com/maps?q=${coord.lat},${coord.log}`)
+        callback()
     })
 
     socket.on('disconnect', (socket) => {
