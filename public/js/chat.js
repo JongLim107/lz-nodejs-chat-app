@@ -66,9 +66,14 @@ $shareLocation.addEventListener('click', () => {
             longitude: position.coords.longitude
         }, () => {
             $shareLocation.removeAttribute('disabled')
-            console.log('Location shared!')  
+            console.log('Location shared!')
         })
     })
 })
 
-socket.emit('join', { username, room })
+socket.emit('join', { username, room }, (error) => {
+    if (error) {
+        alert(error)
+        location.href = '/'
+    }
+})
