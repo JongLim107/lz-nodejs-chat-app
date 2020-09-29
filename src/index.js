@@ -17,14 +17,25 @@ const io = socketio(server)
 // app.use(express.static(publicDirectoryPath))
 app.use(express.static('public'))
 
-let count = 0
 io.on('connection', (socket) => {
     console.log('New WebSicket connection')
+    
     // Send data to client
-    socket.emit('countUpdated', count)
-    socket.on('increment', () => {
-        // socket.emit('countUpdated', ++count) // to specific client
-        io.emit('countUpdated', ++count) // to every client
+    socket.emit('broadcast', 'Welcome!')
+    
+    socket.broadcast.emit('broadcast', 'A new user has joined!')
+    
+    socket.on('message', (message) => {
+        // socket.emit('message', message) // to specific client
+        io.emit('broadcast', message) // to every client
+    })
+    
+    socket.on('shareLocation', (coord) => {
+        io.emit('broadcast', `http://google.com/maps?q=${coord.lat},${coord.log}`)
+    })
+
+    socket.on('disconnect', (socket) => {
+        io.emit('broadcast', 'A user has left!')
     })
 })
 
